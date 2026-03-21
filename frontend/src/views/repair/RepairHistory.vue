@@ -22,7 +22,13 @@
 
     <!-- 阀门列表 -->
     <el-card class="table-card">
-      <el-table :data="valveList" border style="width: 100%">
+      <el-table 
+        :data="valveList" 
+        border 
+        style="width: 100%"
+        highlight-current-row
+        @row-click="handleRowClick"
+      >
         <el-table-column type="index" label="序号" width="60" />
         <el-table-column prop="combined_sn" label="组合序列号" min-width="150" />
         <el-table-column prop="customer_sn" label="客户序列号" min-width="120" />
@@ -146,11 +152,11 @@
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="prepareOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="prepareDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -190,11 +196,11 @@
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="repairStepOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="repairStepDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -238,11 +244,11 @@
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="finalTestOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="finalTestDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -263,23 +269,23 @@
       <div class="warranty-info">
         <div class="info-row-inline">
           <span class="info-label">Product Warranty(质保期):</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="productWarranty" style="width: 150px;" disabled />
           <span class="info-label" style="margin-left: 30px;">维修工程师:</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="repairEngineer" style="width: 150px;" disabled />
           <span class="info-label" style="margin-left: 30px;">审核人1:</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="reviewer1" style="width: 150px;" disabled />
           <span class="info-label" style="margin-left: 30px;">审核人2:</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="reviewer2" style="width: 150px;" disabled />
         </div>
       </div>
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="warrantyOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="warrantyDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -321,11 +327,11 @@
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="testDataOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="testDataDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -352,11 +358,11 @@
       <div class="operator-info">
         <div class="info-row">
           <span class="info-label">作业人</span>
-          <el-input style="width: 150px;" disabled />
+          <el-input v-model="materialOperator" style="width: 150px;" disabled />
         </div>
         <div class="info-row">
           <span class="info-label">日期</span>
-          <el-date-picker type="date" style="width: 150px;" disabled />
+          <el-date-picker v-model="materialDate" type="date" style="width: 150px;" disabled />
         </div>
       </div>
     </el-card>
@@ -373,7 +379,15 @@
         </div>
       </template>
       <div class="image-gallery">
-        <!-- 图片展示区域 -->
+        <div v-for="(img, index) in attachmentImages" :key="index" class="image-item">
+          <el-image 
+            :src="img" 
+            :preview-src-list="attachmentImages"
+            fit="cover"
+            style="width: 120px; height: 120px;"
+          />
+        </div>
+        <div v-if="attachmentImages.length === 0" class="no-image">暂无附件图片</div>
       </div>
     </el-card>
 
@@ -389,7 +403,15 @@
         </div>
       </template>
       <div class="image-gallery">
-        <!-- 图片展示区域 -->
+        <div v-for="(img, index) in packagingImages" :key="index" class="image-item">
+          <el-image 
+            :src="img" 
+            :preview-src-list="packagingImages"
+            fit="cover"
+            style="width: 120px; height: 120px;"
+          />
+        </div>
+        <div v-if="packagingImages.length === 0" class="no-image">暂无包装图片</div>
       </div>
     </el-card>
 
@@ -405,14 +427,24 @@
         </div>
       </template>
       <div class="image-gallery">
-        <!-- 图片展示区域 -->
+        <div v-for="(img, index) in shipmentImages" :key="index" class="image-item">
+          <el-image 
+            :src="img" 
+            :preview-src-list="shipmentImages"
+            fit="cover"
+            style="width: 120px; height: 120px;"
+          />
+        </div>
+        <div v-if="shipmentImages.length === 0" class="no-image">暂无发货图片</div>
       </div>
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { searchValvesList, getRepairRecord } from '../../api/repairRecords'
 
 // 搜索条件
 const searchType = ref('customer_sn')
@@ -425,6 +457,7 @@ const total = ref(0)
 
 // 阀门列表
 const valveList = ref<any[]>([])
+const selectedValve = ref<any>(null)
 
 // 筛选条件
 const filterCombinedSn1 = ref('')
@@ -458,15 +491,34 @@ const checkDate = ref('')
 const faultPhenomenon = ref<string[]>([])
 const toolsReady = ref<string[]>([])
 const replacementParts = ref<string[]>([])
+const prepareOperator = ref('')
+const prepareDate = ref('')
 
 // 维修步骤
 const disassemblySteps = ref<string[]>([])
 const reassemblyResult = ref('')
+const repairStepOperator = ref('')
+const repairStepDate = ref('')
 
 // 最终测试
 const finalTestMotion = ref('')
 const finalTestPneumatic = ref('')
 const finalTestHelium = ref('')
+const finalTestOperator = ref('')
+const finalTestDate = ref('')
+
+// 质保信息
+const productWarranty = ref('')
+const repairEngineer = ref('')
+const reviewer1 = ref('')
+const reviewer2 = ref('')
+const warrantyOperator = ref('')
+const warrantyDate = ref('')
+
+// 图片数据
+const attachmentImages = ref<string[]>([])
+const packagingImages = ref<string[]>([])
+const shipmentImages = ref<string[]>([])
 
 // 测试数据
 const testDataItems = ref([
@@ -474,9 +526,13 @@ const testDataItems = ref([
   { item_name: 'Internal Leak Test', standard: '', test_value: '', result: '' },
   { item_name: 'External Leak Test', standard: '', test_value: '', result: '' }
 ])
+const testDataOperator = ref('')
+const testDataDate = ref('')
 
 // 物料清单
 const materialItems = ref<any[]>([])
+const materialOperator = ref('')
+const materialDate = ref('')
 
 // 状态映射
 const getStatusType = (status: string) => {
@@ -497,16 +553,190 @@ const getStatusText = (status: string) => {
   return map[status] || status
 }
 
-// 搜索
-const handleSearch = () => {
-  // TODO: 调用API搜索
-  console.log('Search:', searchType.value, searchKeyword.value)
+// 搜索阀门
+const handleSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    ElMessage.warning('请输入搜索关键词')
+    return
+  }
+
+  try {
+    const response = await searchValvesList({
+      sn: searchKeyword.value.trim(),
+      search_type: searchType.value,
+      page: currentPage.value,
+      per_page: pageSize.value
+    })
+
+    valveList.value = response.list || []
+    total.value = response.total || 0
+
+    // 自动加载第一条记录的详细信息
+    if (valveList.value.length > 0) {
+      await handleRowClick(valveList.value[0])
+    } else {
+      ElMessage.info('未找到匹配的阀门记录')
+      clearAllData()
+    }
+  } catch (error: any) {
+    valveList.value = []
+    total.value = 0
+    clearAllData()
+  }
+}
+
+// 点击行加载详细数据
+const handleRowClick = async (row: any) => {
+  selectedValve.value = row
+  try {
+    const record = await getRepairRecord(row.id)
+    fillRecordData(record)
+  } catch (error) {
+    // 如果没有维修记录，清空数据
+    clearAllData()
+  }
+}
+
+// 填充维修记录数据
+const fillRecordData = (record: any) => {
+  if (!record) {
+    clearAllData()
+    return
+  }
+
+  // 检测数据
+  checkItemsData.value = record.check_items?.length > 0
+    ? record.check_items.map((item: any, index: number) => ({
+        item_no: index + 1,
+        check_item: item.item_name,
+        result: item.result || '',
+        remark: item.remark || ''
+      }))
+    : [
+        { item_no: 1, check_item: '运动测试', result: '', remark: '' },
+        { item_no: 2, check_item: '气动泄漏', result: '', remark: '' },
+        { item_no: 3, check_item: '氦检', result: '', remark: '' }
+      ]
+  checkOperator.value = record.check_operator || ''
+  checkDate.value = record.check_date || ''
+
+  // 维修前准备
+  faultPhenomenon.value = record.fault_phenomenon || []
+  toolsReady.value = record.tools_ready || []
+  replacementParts.value = record.replacement_parts || []
+  prepareOperator.value = record.prepare_operator || ''
+  prepareDate.value = record.prepare_date || ''
+
+  // 维修步骤
+  disassemblySteps.value = record.disassembly_steps || []
+  reassemblyResult.value = record.reassembly_result || ''
+  repairStepOperator.value = record.repair_step_operator || ''
+  repairStepDate.value = record.repair_step_date || ''
+
+  // 最终测试
+  finalTestMotion.value = record.final_test_motion || ''
+  finalTestPneumatic.value = record.final_test_pneumatic || ''
+  finalTestHelium.value = record.final_test_helium || ''
+  finalTestOperator.value = record.final_test_operator || ''
+  finalTestDate.value = record.final_test_date || ''
+
+  // 质保信息
+  productWarranty.value = record.product_warranty || ''
+  repairEngineer.value = record.repair_engineer || ''
+  reviewer1.value = record.reviewer_1 || ''
+  reviewer2.value = record.reviewer_2 || ''
+  warrantyOperator.value = record.warranty_operator || ''
+  warrantyDate.value = record.warranty_date || ''
+
+  // 测试数据
+  testDataItems.value = record.test_data_items?.length > 0
+    ? record.test_data_items
+    : [
+        { item_name: '空气压降(60sec)', standard: '', test_value: '', result: '' },
+        { item_name: 'Internal Leak Test', standard: '', test_value: '', result: '' },
+        { item_name: 'External Leak Test', standard: '', test_value: '', result: '' }
+      ]
+  testDataOperator.value = record.test_data_operator || ''
+  testDataDate.value = record.test_data_date || ''
+
+  // 物料清单
+  materialItems.value = record.material_items || []
+  materialOperator.value = record.material_operator || ''
+  materialDate.value = record.material_date || ''
+
+  // 图片数据
+  attachmentImages.value = record.attachments?.map((a: any) => a.file_path) || []
+  packagingImages.value = record.packaging_images || []
+  shipmentImages.value = record.shipment_images || []
+}
+
+// 清空所有数据
+const clearAllData = () => {
+  // 检测数据
+  checkItemsData.value = [
+    { item_no: 1, check_item: '运动测试', result: '', remark: '' },
+    { item_no: 2, check_item: '气动泄漏', result: '', remark: '' },
+    { item_no: 3, check_item: '氦检', result: '', remark: '' }
+  ]
+  checkOperator.value = ''
+  checkDate.value = ''
+
+  // 维修前准备
+  faultPhenomenon.value = []
+  toolsReady.value = []
+  replacementParts.value = []
+  prepareOperator.value = ''
+  prepareDate.value = ''
+
+  // 维修步骤
+  disassemblySteps.value = []
+  reassemblyResult.value = ''
+  repairStepOperator.value = ''
+  repairStepDate.value = ''
+
+  // 最终测试
+  finalTestMotion.value = ''
+  finalTestPneumatic.value = ''
+  finalTestHelium.value = ''
+  finalTestOperator.value = ''
+  finalTestDate.value = ''
+
+  // 质保信息
+  productWarranty.value = ''
+  repairEngineer.value = ''
+  reviewer1.value = ''
+  reviewer2.value = ''
+  warrantyOperator.value = ''
+  warrantyDate.value = ''
+
+  // 测试数据
+  testDataItems.value = [
+    { item_name: '空气压降(60sec)', standard: '', test_value: '', result: '' },
+    { item_name: 'Internal Leak Test', standard: '', test_value: '', result: '' },
+    { item_name: 'External Leak Test', standard: '', test_value: '', result: '' }
+  ]
+  testDataOperator.value = ''
+  testDataDate.value = ''
+
+  // 物料清单
+  materialItems.value = []
+  materialOperator.value = ''
+  materialDate.value = ''
+
+  // 图片数据
+  attachmentImages.value = []
+  packagingImages.value = []
+  shipmentImages.value = []
 }
 
 // 重置
 const handleReset = () => {
   searchKeyword.value = ''
   searchType.value = 'customer_sn'
+  valveList.value = []
+  total.value = 0
+  selectedValve.value = null
+  clearAllData()
 }
 
 // 分页
@@ -522,7 +752,7 @@ const handlePageChange = (val: number) => {
 
 // 初始化
 onMounted(() => {
-  // TODO: 加载初始数据
+  // 页面加载时不自动查询
 })
 </script>
 
@@ -713,6 +943,20 @@ onMounted(() => {
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
+
+  .image-item {
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #2d3d4f;
+  }
+
+  .no-image {
+    color: #909399;
+    font-size: 14px;
+    padding: 40px;
+    text-align: center;
+    width: 100%;
+  }
 }
 
 // 表格样式

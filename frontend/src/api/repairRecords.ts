@@ -7,21 +7,46 @@ export interface Valve {
   po_no: string
   abn_sn: string
   customer_sn: string
+  combined_sn?: string
   part_no: string
   description: string
   model_no: string
   fault_description: string
   service_category: string
   current_step: string
+  repair_status?: string
 }
 
-// 通过SN查询阀门
+// 阀门列表响应类型
+export interface ValveListResponse {
+  list: Valve[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
+}
+
+// 通过SN查询阀门（单个）
 export function searchValveBySn(sn: string): Promise<Valve> {
   return request({
     url: '/valves/search',
     method: 'get',
     params: { sn }
   }) as Promise<Valve>
+}
+
+// 查询阀门列表（支持分页）
+export function searchValvesList(params: {
+  sn?: string
+  search_type?: string
+  page?: number
+  per_page?: number
+}): Promise<ValveListResponse> {
+  return request({
+    url: '/valves',
+    method: 'get',
+    params
+  }) as Promise<ValveListResponse>
 }
 
 // 获取阀门维修记录

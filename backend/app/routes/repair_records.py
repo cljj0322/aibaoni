@@ -69,6 +69,134 @@ def search_valve_by_sn():
         return error_response(f'查询阀门失败: {str(e)}', 500, 500)
 
 
+@repair_bp.route('/valves', methods=['GET'])
+def search_valves_list():
+    """查询阀门列表（支持分页）
+
+    查询参数:
+    - sn: 客户SN或艾宝尼SN（模糊查询）
+    - search_type: 搜索类型，'customer_sn' 或 'abn_sn'，不传则同时搜索两者
+    - page: 页码，默认1
+    - per_page: 每页数量，默认10
+    """
+    try:
+        # 获取查询参数
+        sn = request.args.get('sn', '').strip()
+        search_type = request.args.get('search_type', '').strip()
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+
+        # 限制每页最大数量
+        if per_page > 100:
+            per_page = 100
+
+        # 构建查询
+        query = Valve.query
+
+        # 根据SN过滤
+        if sn:
+            if search_type == 'customer_sn':
+                query = query.filter(Valve.customer_sn.ilike(f'%{sn}%'))
+            elif search_type == 'abn_sn':
+                query = query.filter(Valve.abn_sn.ilike(f'%{sn}%'))
+            else:
+                # 同时搜索客户SN和艾宝尼SN
+                query = query.filter(
+                    (Valve.customer_sn.ilike(f'%{sn}%')) |
+                    (Valve.abn_sn.ilike(f'%{sn}%'))
+                )
+
+        # 按创建时间倒序
+        query = query.order_by(Valve.created_at.desc())
+
+        # 分页
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        valves = pagination.items
+
+        # 构建返回数据
+        result_list = []
+        for valve in valves:
+            # 获取订单号
+            po_no = valve.order.po_no if valve.order else None
+
+            # 判断维修状态
+            repair_status = get_repair_status(valve)
+
+            # 构建组合序列号
+            combined_sn = build_combined_sn(valve.customer_sn, valve.abn_sn)
+
+            result_list.append({
+                'id': valve.id,
+                'order_id': valve.order_id,
+                'po_no': po_no,
+                'abn_sn': valve.abn_sn,
+                'customer_sn': valve.customer_sn,
+                'combined_sn': combined_sn,
+                'part_no': valve.part_no,
+                'description': valve.description,
+                'model_no': valve.model_no,
+                'fault_description': valve.fault_description,
+                'service_category': valve.service_category,
+                'current_step': valve.current_step,
+                'repair_status': repair_status,
+                'created_at': valve.created_at.strftime('%Y-%m-%d %H:%M:%S') if valve.created_at else None
+            })
+
+        return success_response({
+            'list': result_list,
+            'total': pagination.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pagination.pages
+        })
+
+    except Exception as e:
+        return error_response(f'查询阀门列表失败: {str(e)}', 500, 500)
+
+
+def build_combined_sn(customer_sn, abn_sn):
+    """构建组合序列号"""
+    if customer_sn and abn_sn:
+        return f"{customer_sn}/{abn_sn}"
+    return customer_sn or abn_sn or ''
+
+
+def get_repair_status(valve):
+    """根据阀门信息判断维修状态
+
+    状态定义:
+    - not_started: 未开始（无current_step且无维修记录）
+    - in_progress: 维修中（有current_step或有维修记录但未完成）
+    - completed: 已完成（维修记录标记为完成）
+    """
+    # 检查是否有维修记录
+    record = RepairRecord.query.filter_by(valve_id=valve.id).first()
+
+    # 判断current_step是否有效（非None且非空字符串）
+    has_current_step = valve.current_step is not None and str(valve.current_step).strip() != ''
+
+    # 如果没有维修记录且没有current_step，则为未开始
+    if not record and not has_current_step:
+        return 'not_started'
+
+    # 如果有维修记录，检查是否完成
+    if record:
+        # 检查是否有发货日期来判断是否完成
+        if record.shipment_date is not None:
+            return 'completed'
+        # 检查是否有完整的最终测试数据（所有测试项都有OK结果）
+        if (record.final_test_motion == 'OK' and
+            record.final_test_pneumatic == 'OK' and
+            record.final_test_helium == 'OK'):
+            return 'completed'
+
+    # 有current_step或有维修记录但未完成，则为维修中
+    if has_current_step or record:
+        return 'in_progress'
+
+    return 'not_started'
+
+
 @repair_bp.route('/valves/<int:valve_id>/record', methods=['GET'])
 def get_repair_record(valve_id):
     """获取阀门维修记录
