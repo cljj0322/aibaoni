@@ -37,9 +37,14 @@ aibaoni/
 │   │   │   │   ├── CreateOrder.vue    # 新建订单
 │   │   │   │   ├── OrderDetail.vue    # 订单详情
 │   │   │   │   └── EditOrder.vue      # 编辑订单
-│   │   │   └── repair/
-│   │   │       ├── RepairRecord.vue   # 维修过程记录单
-│   │   │       └── RepairHistory.vue  # 阀门维修履历
+│   │   │   ├── repair/
+│   │   │   │   ├── RepairRecord.vue   # 维修过程记录单
+│   │   │   │   └── RepairHistory.vue  # 阀门维修履历
+│   │   │   ├── warehouse/
+│   │   │   │   └── WarehouseManage.vue  # 仓储管理
+│   │   │   └── quality-control/
+│   │   │       ├── QualityControl.vue   # 质量控制主页面
+│   │   │       └── CreateInspection.vue # 新建质量检查记录
 │   │   ├── layouts/         # 布局组件
 │   │   │   └── MainLayout.vue
 │   │   ├── router/          # 路由配置
@@ -51,7 +56,9 @@ aibaoni/
 │   │   ├── models.py        # 数据库模型
 │   │   └── routes/          # API路由
 │   │       ├── orders.py    # 订单相关接口
-│   │       └── repair_records.py  # 维修记录接口
+│   │       ├── repair_records.py  # 维修记录接口
+│   │       ├── warehouse.py # 仓储管理接口
+│   │       └── quality_control.py # 质量控制接口
 │   ├── instance/
 │   │   └── valve_repair.db  # SQLite数据库
 │   ├── venv/                # Python虚拟环境
@@ -88,11 +95,34 @@ aibaoni/
   - Packaging（包装）
   - Shipment（发货）
 
+### 3. 仓储管理 ✅
+- **库存管理标签页**:
+  - 库存列表表格（ID、编码、品目名、规格、材质、颜色、库别、单位、产地、品类、现有库存、批次）
+  - 搜索功能：按编码查询、精确查询（编码@批次）
+  - 分页功能
+  - 新增库存：嵌入式三列表单（12个字段），表单验证
+  - 入库/出库操作弹窗
+  - 删除库存
+- 物料编码管理标签页:
+  - 物料编码列表（物料编码、物料名称、规格、品类、单位、品牌、供应商）
+  - 搜索功能
+  - 新增/编辑/删除物料编码
+
+### 4. 质量控制 ✅
+- **质量检查记录管理标签页**:
+  - 质量检查记录列表（ID、生产计划ID、产品代码、检查时间、检查结果、创建时间）
+  - 搜索结果标签（合格/不合格/待复检）
+  - 新建质量检查记录：独立页面（CreateInspection.vue），单列全宽表单
+  - 缺陷列表：动态增删（缺陷类型、描述、数量）
+  - 编辑/删除质量检查记录
+- **维修计划管理标签页**:
+  - 维修工单列表（ID、产品代码、产品名称、数量、计划时间、状态）
+  - 状态筛选（待开始/进行中/已完成）
+  - 新建/编辑维修工单弹窗表单
+  - 删除维修工单
+
 ### 待开发模块
 - 阀门维修履历（查询页面）
-- 仓储管理
-- 质量检查记录管理
-- 维修质量管理
 - 设备记录维护
 - 用户管理
 
@@ -142,6 +172,23 @@ aibaoni/
 - TestDataItem: 测试数据项
 - Attachment: 附件
 
+### 仓储管理模型
+- **Inventory**: 库存管理
+  - code, name, spec, material, material_category, color, warehouse, unit, origin, category, stock, batch
+- **InventoryRecord**: 库存操作记录（入库/出库）
+  - inventory_id, operation_type, quantity, operator, remark
+- **MaterialCode**: 物料编码管理
+  - material_code, material_name, specification, category, unit, brand, supplier, remark
+
+### 质量控制模型
+- **QualityInspection**: 质量检查记录
+  - plan_id, product_code, inspect_time, result, remark
+  - 关联缺陷列表 InspectionDefect
+- **InspectionDefect**: 质量检查缺陷项
+  - inspection_id, type, description, quantity
+- **RepairWorkorder**: 维修工单
+  - product_code, product_name, quantity, plan_start, plan_end, actual_start, actual_end, status
+
 ## API接口
 
 ### 订单接口
@@ -163,6 +210,29 @@ aibaoni/
 - `POST /api/valves/:valve_id/check-items` - 添加检测项
 - `POST /api/valves/:valve_id/material-items` - 添加物料项
 - `POST /api/valves/:valve_id/attachments` - 上传附件
+
+### 仓储管理接口
+- `GET /api/warehouse/inventory` - 库存列表（分页、搜索）
+- `POST /api/warehouse/inventory` - 新增库存
+- `PUT /api/warehouse/inventory/:id` - 更新库存
+- `DELETE /api/warehouse/inventory/:id` - 删除库存
+- `POST /api/warehouse/inventory/:id/inbound` - 入库操作
+- `POST /api/warehouse/inventory/:id/outbound` - 出库操作
+- `GET /api/warehouse/materials` - 物料编码列表
+- `POST /api/warehouse/materials` - 新增物料编码
+- `PUT /api/warehouse/materials/:id` - 更新物料编码
+- `DELETE /api/warehouse/materials/:id` - 删除物料编码
+
+### 质量控制接口
+- `GET /api/quality-control/inspection` - 质量检查记录列表（分页、关键词搜索）
+- `POST /api/quality-control/inspection` - 新增质量检查记录（含缺陷列表）
+- `PUT /api/quality-control/inspection/:id` - 更新质量检查记录
+- `DELETE /api/quality-control/inspection/:id` - 删除质量检查记录
+- `GET /api/quality-control/inspection/:id` - 质量检查记录详情
+- `GET /api/quality-control/workorder` - 维修工单列表（分页、状态筛选）
+- `POST /api/quality-control/workorder` - 新增维修工单
+- `PUT /api/quality-control/workorder/:id` - 更新维修工单
+- `DELETE /api/quality-control/workorder/:id` - 删除维修工单
 
 ## 核心功能实现
 
@@ -241,5 +311,8 @@ python run.py        # Flask服务器 http://localhost:5001
 
 - ✅ 客户订单系统：完整CRUD功能
 - ✅ 维修过程记录：SN扫码查询、信息自动填充、多区块表单
+- ✅ 仓储管理：库存管理、物料编码管理、入库出库操作
+- ✅ 质量控制：质量检查记录管理、维修计划管理
 - 🔄 阀门维修履历：待开发
-- ⏳ 其他模块：待开发
+- ⏳ 设备记录维护：待开发
+- ⏳ 用户管理：待开发

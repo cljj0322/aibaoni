@@ -19,8 +19,12 @@ def create_app():
     # 注册蓝图
     from .routes.orders import orders_bp
     from .routes.repair_records import repair_bp
+    from .routes.warehouse import warehouse_bp
+    from .routes.quality_control import quality_control_bp
     app.register_blueprint(orders_bp, url_prefix='/api')
     app.register_blueprint(repair_bp, url_prefix='/api')
+    app.register_blueprint(warehouse_bp, url_prefix='/api')
+    app.register_blueprint(quality_control_bp, url_prefix='/api')
     
     # 创建数据库表
     with app.app_context():

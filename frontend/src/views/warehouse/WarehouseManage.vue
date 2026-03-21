@@ -26,9 +26,121 @@
           <el-button style="margin-left: 10px;" @click="handleRefresh">
             <el-icon><Refresh /></el-icon>刷新
           </el-button>
-          <el-button type="primary" style="margin-left: 10px;" @click="handleAddInventory">
-            <el-icon><Plus /></el-icon>新增库存
+          <el-button 
+            :type="showAddForm ? 'info' : 'primary'" 
+            style="margin-left: 10px;" 
+            @click="toggleAddForm"
+          >
+            <el-icon><Plus /></el-icon>{{ showAddForm ? '关闭新增' : '新增库存' }}
           </el-button>
+        </div>
+
+        <!-- 新增库存表单区域 -->
+        <div v-show="showAddForm" class="add-form-section">
+          <div class="add-form-header">
+            <span class="add-form-title">新增库存</span>
+            <el-button link @click="toggleAddForm">
+              <el-icon><Close /></el-icon>关闭
+            </el-button>
+          </div>
+          <el-form 
+            ref="inventoryFormRef"
+            :model="inventoryForm" 
+            :rules="inventoryRules"
+            label-width="90px"
+            class="inventory-form"
+          >
+            <!-- 第一行：编码、批次号、品目名 -->
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="编码" prop="code">
+                  <el-input v-model="inventoryForm.code" placeholder="请输入编码" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="批次号" prop="batch">
+                  <el-input v-model="inventoryForm.batch" placeholder="请输入批次号" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="品目名" prop="name">
+                  <el-input v-model="inventoryForm.name" placeholder="请输入品目名" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <!-- 第二行：规格信息、材质、材质分类 -->
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="规格信息" prop="spec">
+                  <el-input v-model="inventoryForm.spec" placeholder="请输入规格信息" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="材质" prop="material">
+                  <el-input v-model="inventoryForm.material" placeholder="请输入材质" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="材质分类" prop="material_category">
+                  <el-input v-model="inventoryForm.material_category" placeholder="请输入材质分类" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <!-- 第三行：颜色、库别、单位 -->
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="颜色" prop="color">
+                  <el-input v-model="inventoryForm.color" placeholder="请输入颜色" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="库别" prop="warehouse">
+                  <el-input v-model="inventoryForm.warehouse" placeholder="请输入库别" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="单位" prop="unit">
+                  <el-input v-model="inventoryForm.unit" placeholder="请输入单位" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <!-- 第四行：产地、品类、现有库存 -->
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="产地" prop="origin">
+                  <el-input v-model="inventoryForm.origin" placeholder="请输入产地" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="品类" prop="category">
+                  <el-input v-model="inventoryForm.category" placeholder="请输入品类" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="现有库存" prop="stock">
+                  <el-input-number 
+                    v-model="inventoryForm.stock" 
+                    :min="0" 
+                    style="width: 100%;" 
+                    placeholder="请输入现有库存"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+            
+            <!-- 按钮行 -->
+            <el-row>
+              <el-col :span="24">
+                <div class="add-form-actions">
+                  <el-button type="primary" @click="handleSaveInventory">提交</el-button>
+                  <el-button @click="handleResetInventoryForm">重置</el-button>
+                </div>
+              </el-col>
+            </el-row>
+          </el-form>
         </div>
 
         <!-- 库存表格 -->
@@ -128,84 +240,6 @@
         </div>
       </el-tab-pane>
     </el-tabs>
-
-    <!-- 新增/编辑库存弹窗 -->
-    <el-dialog
-      v-model="inventoryDialogVisible"
-      :title="inventoryDialogTitle"
-      width="600px"
-    >
-      <el-form :model="inventoryForm" label-width="100px">
-        <el-form-item label="编码">
-          <el-input v-model="inventoryForm.code" placeholder="请输入编码" />
-        </el-form-item>
-        <el-form-item label="品目名">
-          <el-input v-model="inventoryForm.name" placeholder="请输入品目名" />
-        </el-form-item>
-        <el-form-item label="规格信息">
-          <el-input v-model="inventoryForm.spec" placeholder="请输入规格信息" />
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="材质">
-              <el-input v-model="inventoryForm.material" placeholder="请输入材质" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="材质分类">
-              <el-input v-model="inventoryForm.material_category" placeholder="请输入材质分类" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="颜色">
-              <el-input v-model="inventoryForm.color" placeholder="请输入颜色" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="库别">
-              <el-select v-model="inventoryForm.warehouse" placeholder="请选择">
-                <el-option label="A" value="A" />
-                <el-option label="B" value="B" />
-                <el-option label="C" value="C" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="单位">
-              <el-input v-model="inventoryForm.unit" placeholder="请输入单位" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="产地">
-              <el-input v-model="inventoryForm.origin" placeholder="请输入产地" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="品类">
-              <el-input v-model="inventoryForm.category" placeholder="请输入品类" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="现有库存">
-              <el-input-number v-model="inventoryForm.stock" :min="0" style="width: 100%;" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="批次">
-          <el-input v-model="inventoryForm.batch" placeholder="请输入批次" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="inventoryDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSaveInventory">确定</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 入库弹窗 -->
     <el-dialog
@@ -314,7 +348,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, Minus, Delete } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, Minus, Delete, Close } from '@element-plus/icons-vue'
 import {
   getInventoryList,
   createInventory,
@@ -339,9 +373,21 @@ const pageSize = ref(10)
 const total = ref(0)
 const inventoryList = ref<any[]>([])
 
+// 显示新增表单
+const showAddForm = ref(false)
+
+// 切换新增表单显示
+const toggleAddForm = () => {
+  showAddForm.value = !showAddForm.value
+  if (showAddForm.value) {
+    handleResetInventoryForm()
+  }
+}
+
 // 库存弹窗
 const inventoryDialogVisible = ref(false)
 const inventoryDialogTitle = ref('新增库存')
+const inventoryFormRef = ref<any>(null)
 const inventoryForm = reactive({
   id: null as number | null,
   code: '',
@@ -357,6 +403,14 @@ const inventoryForm = reactive({
   stock: 0,
   batch: ''
 })
+
+// 表单验证规则
+const inventoryRules = {
+  code: [{ required: true, message: '请输入编码', trigger: 'blur' }],
+  batch: [{ required: true, message: '请输入批次号', trigger: 'blur' }],
+  name: [{ required: true, message: '请输入品目名', trigger: 'blur' }],
+  stock: [{ required: true, message: '请输入现有库存', trigger: 'blur' }]
+}
 
 // 入库弹窗
 const inboundDialogVisible = ref(false)
@@ -403,27 +457,33 @@ const materialForm = reactive({
 // 搜索库存
 const handleSearch = async () => {
   try {
-    const res = await getInventoryList({
+    const data = await getInventoryList({
       search_type: searchType.value,
       keyword: searchKeyword.value,
       page: currentPage.value,
       per_page: pageSize.value
-    })
-    if (res.data.code === 200) {
-      inventoryList.value = res.data.data.items
-      total.value = res.data.data.total
-    }
+    }) as any
+    inventoryList.value = data.items || []
+    total.value = data.total || 0
   } catch (error) {
     ElMessage.error('获取库存列表失败')
   }
 }
 
 // 刷新库存
-const handleRefresh = () => {
+const handleRefresh = async () => {
+  console.log('刷新按钮被点击')
   searchKeyword.value = ''
   searchType.value = 'code'
   currentPage.value = 1
-  handleSearch()
+  console.log('准备调用handleSearch，参数：', {
+    search_type: searchType.value,
+    keyword: searchKeyword.value,
+    page: currentPage.value,
+    per_page: pageSize.value
+  })
+  await handleSearch()
+  console.log('handleSearch调用完成')
 }
 
 // 新增库存
@@ -447,26 +507,52 @@ const handleAddInventory = () => {
   inventoryDialogVisible.value = true
 }
 
+// 重置表单
+const handleResetInventoryForm = () => {
+  if (inventoryFormRef.value) {
+    inventoryFormRef.value.resetFields()
+  }
+  Object.assign(inventoryForm, {
+    id: null,
+    code: '',
+    name: '',
+    spec: '',
+    material: '',
+    material_category: '',
+    color: '',
+    warehouse: 'A',
+    unit: '',
+    origin: '',
+    category: '',
+    stock: 0,
+    batch: ''
+  })
+}
+
 // 保存库存
 const handleSaveInventory = async () => {
+  if (!inventoryFormRef.value) return
+
   try {
+    await inventoryFormRef.value.validate()
+
     if (inventoryForm.id) {
       // 更新
-      const res = await updateInventory(inventoryForm.id, inventoryForm)
-      if (res.data.code === 200) {
-        ElMessage.success('更新成功')
-      }
+      await updateInventory(inventoryForm.id, inventoryForm)
+      ElMessage.success('更新成功')
     } else {
       // 新增
-      const res = await createInventory(inventoryForm)
-      if (res.data.code === 200) {
-        ElMessage.success('新增成功')
-      }
+      await createInventory(inventoryForm)
+      ElMessage.success('新增成功')
     }
-    inventoryDialogVisible.value = false
-    handleSearch()
-  } catch (error) {
-    ElMessage.error('保存失败')
+    showAddForm.value = false
+    await handleSearch()
+  } catch (error: any) {
+    if (error.message) {
+      ElMessage.error(error.message)
+    } else {
+      ElMessage.error('保存失败')
+    }
   }
 }
 
@@ -484,17 +570,13 @@ const handleInbound = (row: any) => {
 const handleConfirmInbound = async () => {
   try {
     if (!inboundForm.id) return
-    const res = await inboundInventory(inboundForm.id, {
+    await inboundInventory(inboundForm.id, {
       quantity: inboundForm.quantity,
       remark: inboundForm.remark
     })
-    if (res.data.code === 200) {
-      ElMessage.success('入库成功')
-      inboundDialogVisible.value = false
-      handleSearch()
-    } else {
-      ElMessage.error(res.data.message || '入库失败')
-    }
+    ElMessage.success('入库成功')
+    inboundDialogVisible.value = false
+    await handleSearch()
   } catch (error) {
     ElMessage.error('入库失败')
   }
@@ -514,17 +596,13 @@ const handleOutbound = (row: any) => {
 const handleConfirmOutbound = async () => {
   try {
     if (!outboundForm.id) return
-    const res = await outboundInventory(outboundForm.id, {
+    await outboundInventory(outboundForm.id, {
       quantity: outboundForm.quantity,
       remark: outboundForm.remark
     })
-    if (res.data.code === 200) {
-      ElMessage.success('出库成功')
-      outboundDialogVisible.value = false
-      handleSearch()
-    } else {
-      ElMessage.error(res.data.message || '出库失败')
-    }
+    ElMessage.success('出库成功')
+    outboundDialogVisible.value = false
+    await handleSearch()
   } catch (error) {
     ElMessage.error('出库失败')
   }
@@ -538,13 +616,9 @@ const handleDelete = (row: any) => {
     type: 'warning'
   }).then(async () => {
     try {
-      const res = await deleteInventory(row.id)
-      if (res.data.code === 200) {
-        ElMessage.success('删除成功')
-        handleSearch()
-      } else {
-        ElMessage.error(res.data.message || '删除失败')
-      }
+      await deleteInventory(row.id)
+      ElMessage.success('删除成功')
+      await handleSearch()
     } catch (error) {
       ElMessage.error('删除失败')
     }
@@ -552,28 +626,26 @@ const handleDelete = (row: any) => {
 }
 
 // 分页
-const handleSizeChange = (val: number) => {
+const handleSizeChange = async (val: number) => {
   pageSize.value = val
-  handleSearch()
+  await handleSearch()
 }
 
-const handlePageChange = (val: number) => {
+const handlePageChange = async (val: number) => {
   currentPage.value = val
-  handleSearch()
+  await handleSearch()
 }
 
 // ========== 物料编码管理 ==========
 const handleMaterialSearch = async () => {
   try {
-    const res = await getMaterialList({
+    const data = await getMaterialList({
       keyword: materialSearchKeyword.value,
       page: materialPage.value,
       per_page: materialPageSize.value
-    })
-    if (res.data.code === 200) {
-      materialList.value = res.data.data.items
-      materialTotal.value = res.data.data.total
-    }
+    }) as any
+    materialList.value = data.items || []
+    materialTotal.value = data.total || 0
   } catch (error) {
     ElMessage.error('获取物料列表失败')
   }
@@ -660,9 +732,9 @@ const handleMaterialPageChange = (val: number) => {
 }
 
 // 初始化
-onMounted(() => {
-  handleSearch()
-  handleMaterialSearch()
+onMounted(async () => {
+  await handleSearch()
+  await handleMaterialSearch()
 })
 </script>
 
@@ -726,6 +798,84 @@ onMounted(() => {
   }
 }
 
+// 新增表单区域
+.add-form-section {
+  margin-bottom: 20px;
+  background-color: #1b2838;
+  border-radius: 4px;
+  border: 1px solid #2d3d4f;
+  overflow: hidden;
+}
+
+.add-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background-color: #243447;
+  border-bottom: 1px solid #2d3d4f;
+}
+
+.add-form-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.add-form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #2d3d4f;
+  margin-top: 10px;
+}
+
+// 库存表单样式
+.inventory-form {
+  padding: 20px;
+  
+  .el-form-item {
+    margin-bottom: 18px;
+  }
+  
+  .el-form-item__label {
+    color: #fff;
+    font-size: 14px;
+  }
+  
+  .el-input__wrapper {
+    background-color: #243447;
+    box-shadow: 0 0 0 1px #2d3d4f inset;
+  }
+  
+  .el-input__inner {
+    background-color: transparent;
+    color: #fff;
+    
+    &::placeholder {
+      color: #606266;
+    }
+  }
+  
+  .el-input-number {
+    .el-input__wrapper {
+      background-color: #243447;
+    }
+    
+    .el-input-number__decrease,
+    .el-input-number__increase {
+      background-color: #2d3d4f;
+      border-color: #2d3d4f;
+      color: #fff;
+      
+      &:hover {
+        color: #409eff;
+      }
+    }
+  }
+}
+
 .data-table {
   background-color: #1b2838;
   
@@ -782,6 +932,64 @@ onMounted(() => {
   
   .el-form-item__label {
     color: #fff;
+  }
+  
+  .el-dialog__header {
+    border-bottom: 1px solid #2d3d4f;
+    margin-right: 0;
+    padding: 15px 20px;
+  }
+  
+  .el-dialog__body {
+    padding: 20px;
+  }
+  
+  .el-dialog__footer {
+    border-top: 1px solid #2d3d4f;
+    padding: 15px 20px;
+  }
+}
+
+// 库存弹窗表单样式
+:deep(.inventory-form) {
+  .el-form-item {
+    margin-bottom: 18px;
+  }
+  
+  .el-form-item__label {
+    color: #fff;
+    font-size: 14px;
+  }
+  
+  .el-input__wrapper {
+    background-color: #243447;
+    box-shadow: 0 0 0 1px #2d3d4f inset;
+  }
+  
+  .el-input__inner {
+    background-color: transparent;
+    color: #fff;
+    
+    &::placeholder {
+      color: #606266;
+    }
+  }
+  
+  .el-input-number {
+    .el-input__wrapper {
+      background-color: #243447;
+    }
+    
+    .el-input-number__decrease,
+    .el-input-number__increase {
+      background-color: #2d3d4f;
+      border-color: #2d3d4f;
+      color: #fff;
+      
+      &:hover {
+        color: #409eff;
+      }
+    }
   }
 }
 </style>

@@ -47,12 +47,17 @@ const router = createRouter({
         {
           path: '/quality-control',
           name: 'quality-control',
-          component: () => import('../views/orders/OrderList.vue'),
+          component: () => import('../views/quality-control/QualityControl.vue'),
+        },
+        {
+          path: '/quality-control/create',
+          name: 'quality-control-create',
+          component: () => import('../views/quality-control/CreateInspection.vue'),
         },
         {
           path: '/repair-workorder',
           name: 'repair-workorder',
-          component: () => import('../views/orders/OrderList.vue'),
+          component: () => import('../views/quality-control/QualityControl.vue'),
         },
         {
           path: '/equipment',

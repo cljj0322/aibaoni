@@ -321,14 +321,14 @@ class TestDataItem(db.Model):
 class Attachment(db.Model):
     """附件"""
     __tablename__ = 'attachments'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     repair_record_id = db.Column(db.Integer, db.ForeignKey('repair_records.id'), nullable=False)
     type = db.Column(db.String(50), nullable=True)
     file_name = db.Column(db.String(200), nullable=True)
     file_path = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -336,3 +336,184 @@ class Attachment(db.Model):
             'file_name': self.file_name,
             'file_path': self.file_path
         }
+
+
+class Inventory(db.Model):
+    """库存管理"""
+    __tablename__ = 'inventory'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(100), nullable=False, index=True)
+    name = db.Column(db.String(200), nullable=False)
+    spec = db.Column(db.String(200), nullable=True)
+    material = db.Column(db.String(100), nullable=True)
+    material_category = db.Column(db.String(100), nullable=True)
+    color = db.Column(db.String(50), nullable=True)
+    warehouse = db.Column(db.String(50), default='A')
+    unit = db.Column(db.String(50), nullable=True)
+    origin = db.Column(db.String(100), nullable=True)
+    category = db.Column(db.String(100), nullable=True)
+    stock = db.Column(db.Integer, default=0)
+    batch = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 关联关系
+    records = db.relationship('InventoryRecord', backref='inventory', lazy=True, cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'code': self.code,
+            'name': self.name,
+            'spec': self.spec,
+            'material': self.material,
+            'material_category': self.material_category,
+            'color': self.color,
+            'warehouse': self.warehouse,
+            'unit': self.unit,
+            'origin': self.origin,
+            'category': self.category,
+            'stock': self.stock,
+            'batch': self.batch,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
+
+class InventoryRecord(db.Model):
+    """库存操作记录（入库/出库）"""
+    __tablename__ = 'inventory_records'
+
+    id = db.Column(db.Integer, primary_key=True)
+    inventory_id = db.Column(db.Integer, db.ForeignKey('inventory.id'), nullable=False)
+    operation_type = db.Column(db.String(20), nullable=False)  # 'inbound' 或 'outbound'
+    quantity = db.Column(db.Integer, nullable=False)
+    operator = db.Column(db.String(100), nullable=True)
+    remark = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'inventory_id': self.inventory_id,
+            'operation_type': self.operation_type,
+            'quantity': self.quantity,
+            'operator': self.operator,
+            'remark': self.remark,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
+        }
+
+
+class MaterialCode(db.Model):
+    """物料编码管理"""
+    __tablename__ = 'material_codes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    material_code = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    material_name = db.Column(db.String(200), nullable=False)
+    specification = db.Column(db.String(200), nullable=True)
+    category = db.Column(db.String(100), nullable=True)
+    unit = db.Column(db.String(50), nullable=True)
+    brand = db.Column(db.String(100), nullable=True)
+    supplier = db.Column(db.String(200), nullable=True)
+    remark = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'material_code': self.material_code,
+            'material_name': self.material_name,
+            'specification': self.specification,
+            'category': self.category,
+            'unit': self.unit,
+            'brand': self.brand,
+            'supplier': self.supplier,
+            'remark': self.remark,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
+
+class QualityInspection(db.Model):
+    """质量检查记录"""
+    __tablename__ = 'quality_inspections'
+
+    id = db.Column(db.Integer, primary_key=True)
+    plan_id = db.Column(db.String(100), nullable=False)
+    product_code = db.Column(db.String(100), nullable=False, index=True)
+    inspect_time = db.Column(db.String(30), nullable=False)
+    result = db.Column(db.String(20), nullable=False)  # pass / fail / recheck
+    remark = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 关联缺陷列表
+    defects = db.relationship('InspectionDefect', backref='inspection', lazy=True, cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'plan_id': self.plan_id,
+            'product_code': self.product_code,
+            'inspect_time': self.inspect_time,
+            'result': self.result,
+            'remark': self.remark,
+            'defects': [d.to_dict() for d in self.defects],
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
+
+class InspectionDefect(db.Model):
+    """质量检查缺陷项"""
+    __tablename__ = 'inspection_defects'
+
+    id = db.Column(db.Integer, primary_key=True)
+    inspection_id = db.Column(db.Integer, db.ForeignKey('quality_inspections.id'), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    quantity = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'description': self.description,
+            'quantity': self.quantity
+        }
+
+
+class RepairWorkorder(db.Model):
+    """维修工单"""
+    __tablename__ = 'repair_workorders'
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_code = db.Column(db.String(100), nullable=False, index=True)
+    product_name = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    plan_start = db.Column(db.String(20), nullable=False)
+    plan_end = db.Column(db.String(20), nullable=False)
+    actual_start = db.Column(db.String(20), nullable=True)
+    actual_end = db.Column(db.String(20), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='pending')  # pending / in_progress / completed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'product_code': self.product_code,
+            'product_name': self.product_name,
+            'quantity': self.quantity,
+            'plan_start': self.plan_start,
+            'plan_end': self.plan_end,
+            'actual_start': self.actual_start,
+            'actual_end': self.actual_end,
+            'status': self.status,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
