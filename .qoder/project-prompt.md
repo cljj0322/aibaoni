@@ -30,7 +30,9 @@ aibaoni/
 │   │   ├── api/             # API接口封装
 │   │   │   ├── request.ts   # Axios配置（含响应拦截器）
 │   │   │   ├── orders.ts    # 订单相关API
-│   │   │   └── repairRecords.ts  # 维修记录API
+│   │   │   ├── repairRecords.ts  # 维修记录API
+│   │   │   ├── equipment.ts # 设备维护记录API
+│   │   │   └── users.ts     # 用户管理API
 │   │   ├── views/           # 页面组件
 │   │   │   ├── orders/
 │   │   │   │   ├── OrderList.vue      # 订单列表
@@ -42,9 +44,17 @@ aibaoni/
 │   │   │   │   └── RepairHistory.vue  # 阀门维修履历
 │   │   │   ├── warehouse/
 │   │   │   │   └── WarehouseManage.vue  # 仓储管理
-│   │   │   └── quality-control/
-│   │   │       ├── QualityControl.vue   # 质量控制主页面
-│   │   │       └── CreateInspection.vue # 新建质量检查记录
+│   │   │   ├── quality-control/
+│   │   │   │   ├── QualityControl.vue   # 质量控制主页面
+│   │   │   │   ├── CreateInspection.vue # 新建质量检查记录
+│   │   │   │   └── RepairWorkorder.vue  # 维修工单管理
+│   │   │   ├── equipment/
+│   │   │   │   └── EquipmentMaintenance.vue  # 设备维护记录管理
+│   │   │   ├── repair/
+│   │   │   │   ├── RepairRecord.vue   # 维修过程记录单
+│   │   │   │   └── RepairHistory.vue  # 阀门维修履历
+│   │   │   └── users/
+│   │   │       └── UserManagement.vue # 用户管理
 │   │   ├── layouts/         # 布局组件
 │   │   │   └── MainLayout.vue
 │   │   ├── router/          # 路由配置
@@ -58,7 +68,8 @@ aibaoni/
 │   │       ├── orders.py    # 订单相关接口
 │   │       ├── repair_records.py  # 维修记录接口
 │   │       ├── warehouse.py # 仓储管理接口
-│   │       └── quality_control.py # 质量控制接口
+│   │       ├── quality_control.py # 质量控制接口
+│   │       └── users.py     # 用户管理接口
 │   ├── instance/
 │   │   └── valve_repair.db  # SQLite数据库
 │   ├── venv/                # Python虚拟环境
@@ -121,10 +132,23 @@ aibaoni/
   - 新建/编辑维修工单弹窗表单
   - 删除维修工单
 
+### 5. 设备维护记录管理 ✅
+- 设备维护记录列表（ID、设备ID、设备名称、维护类型、计划时间、实际时间、状态、创建时间）
+- 状态筛选（待维护/维护中/已完成）
+- 新建/编辑设备维护记录弹窗表单
+- 删除设备维护记录
+- 后端API: `/api/equipment/maintenance`
+
+### 6. 用户管理 ✅
+- 用户列表（用户名、中文名、角色、邮箱、创建时间、修改时间）
+- 用户名搜索功能
+- 新建用户弹窗表单（用户名、中文名、角色、邮箱、密码）
+- 编辑用户信息
+- 删除用户
+- 后端API: `/api/users`
+
 ### 待开发模块
-- 阀门维修履历（查询页面）
-- 设备记录维护
-- 用户管理
+- 阀门维修履历（查询页面）- 路由已配置，页面已实现
 
 ## 数据库模型
 
@@ -189,6 +213,14 @@ aibaoni/
 - **RepairWorkorder**: 维修工单
   - product_code, product_name, quantity, plan_start, plan_end, actual_start, actual_end, status
 
+### 设备维护记录模型
+- **EquipmentMaintenance**: 设备维护记录
+  - equipment_id, equipment_name, maintenance_type, plan_time, actual_time, status, remark
+
+### 用户管理模型
+- **User**: 用户管理
+  - username, chinese_name, role, email, password_hash
+
 ## API接口
 
 ### 订单接口
@@ -233,6 +265,18 @@ aibaoni/
 - `POST /api/quality-control/workorder` - 新增维修工单
 - `PUT /api/quality-control/workorder/:id` - 更新维修工单
 - `DELETE /api/quality-control/workorder/:id` - 删除维修工单
+
+### 设备维护记录接口
+- `GET /api/equipment/maintenance` - 设备维护记录列表（分页、状态筛选）
+- `POST /api/equipment/maintenance` - 新增设备维护记录
+- `PUT /api/equipment/maintenance/:id` - 更新设备维护记录
+- `DELETE /api/equipment/maintenance/:id` - 删除设备维护记录
+
+### 用户管理接口
+- `GET /api/users` - 用户列表（分页、用户名搜索）
+- `POST /api/users` - 新增用户（检查用户名唯一性）
+- `PUT /api/users/:id` - 更新用户信息
+- `DELETE /api/users/:id` - 删除用户
 
 ## 核心功能实现
 
@@ -312,7 +356,8 @@ python run.py        # Flask服务器 http://localhost:5001
 - ✅ 客户订单系统：完整CRUD功能
 - ✅ 维修过程记录：SN扫码查询、信息自动填充、多区块表单
 - ✅ 仓储管理：库存管理、物料编码管理、入库出库操作
-- ✅ 质量控制：质量检查记录管理、维修计划管理
-- 🔄 阀门维修履历：待开发
-- ⏳ 设备记录维护：待开发
-- ⏳ 用户管理：待开发
+- ✅ 质量控制：质量检查记录管理、维修工单管理
+- ✅ 设备维护记录管理：完整CRUD功能
+- ✅ 用户管理：完整CRUD功能，支持新建/编辑/删除用户
+- ✅ 阀门维修履历：页面已实现，路由已配置
+- ⏳ 新闻菜单：已隐藏（注释）
