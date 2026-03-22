@@ -437,6 +437,31 @@ class MaterialCode(db.Model):
         }
 
 
+class User(db.Model):
+    """用户管理"""
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    chinese_name = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='operator')  # admin / engineer / operator
+    email = db.Column(db.String(100), nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'chinese_name': self.chinese_name,
+            'role': self.role,
+            'email': self.email,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
+
 class QualityInspection(db.Model):
     """质量检查记录"""
     __tablename__ = 'quality_inspections'
@@ -513,6 +538,36 @@ class RepairWorkorder(db.Model):
             'actual_start': self.actual_start,
             'actual_end': self.actual_end,
             'status': self.status,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
+        }
+
+
+class EquipmentMaintenance(db.Model):
+    """设备维护记录"""
+    __tablename__ = 'equipment_maintenance'
+
+    id = db.Column(db.Integer, primary_key=True)
+    equipment_id = db.Column(db.String(100), nullable=False, index=True)
+    equipment_name = db.Column(db.String(200), nullable=False)
+    maintenance_type = db.Column(db.String(100), nullable=False)
+    plan_time = db.Column(db.String(30), nullable=False)
+    actual_time = db.Column(db.String(30), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='pending')  # pending / in_progress / completed
+    remark = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'equipment_id': self.equipment_id,
+            'equipment_name': self.equipment_name,
+            'maintenance_type': self.maintenance_type,
+            'plan_time': self.plan_time,
+            'actual_time': self.actual_time,
+            'status': self.status,
+            'remark': self.remark,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
         }

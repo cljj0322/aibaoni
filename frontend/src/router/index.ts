@@ -57,12 +57,12 @@ const router = createRouter({
         {
           path: '/repair-workorder',
           name: 'repair-workorder',
-          component: () => import('../views/quality-control/QualityControl.vue'),
+          component: () => import('../views/quality-control/RepairWorkorder.vue'),
         },
         {
           path: '/equipment',
           name: 'equipment',
-          component: () => import('../views/orders/OrderList.vue'),
+          component: () => import('../views/equipment/EquipmentMaintenance.vue'),
         },
         {
           path: '/news',
@@ -72,7 +72,7 @@ const router = createRouter({
         {
           path: '/users',
           name: 'users',
-          component: () => import('../views/orders/OrderList.vue'),
+          component: () => import('../views/users/UserManagement.vue'),
         },
       ],
     },

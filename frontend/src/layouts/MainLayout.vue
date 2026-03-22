@@ -15,7 +15,7 @@ const menuItems = [
   { index: '/quality-control', title: '质量控制', icon: 'CircleCheck' },
   { index: '/repair-workorder', title: '维修工单管理', icon: 'List' },
   { index: '/equipment', title: '设备维护', icon: 'Tools' },
-  { index: '/news', title: '新闻', icon: 'Grid' },
+  // { index: '/news', title: '新闻', icon: 'Grid' },
   { index: '/users', title: '用户管理', icon: 'User' },
 ]
 

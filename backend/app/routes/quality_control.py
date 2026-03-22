@@ -9,7 +9,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from .. import db
-from ..models import QualityInspection, InspectionDefect, RepairWorkorder
+from ..models import QualityInspection, InspectionDefect, RepairWorkorder, EquipmentMaintenance
 
 quality_control_bp = Blueprint('quality_control', __name__)
 
@@ -369,3 +369,138 @@ def delete_workorder(workorder_id):
     except Exception as e:
         db.session.rollback()
         return error_response(f'删除维修工单失败: {str(e)}', 500, 500)
+
+
+# ========================================
+# 设备维护记录 CRUD
+# ========================================
+
+@quality_control_bp.route('/equipment/maintenance', methods=['GET'])
+def get_equipment_maintenance_list():
+    """获取设备维护记录列表
+
+    查询参数:
+    - status: 状态筛选（pending/in_progress/completed/all）
+    - page: 页码，默认1
+    - per_page: 每页数量，默认10
+    """
+    try:
+        status_filter = request.args.get('status', 'all')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+
+        if per_page > 100:
+            per_page = 100
+
+        query = EquipmentMaintenance.query
+
+        # 状态筛选
+        if status_filter and status_filter != 'all':
+            query = query.filter(EquipmentMaintenance.status == status_filter)
+
+        # 按创建时间倒序
+        query = query.order_by(EquipmentMaintenance.created_at.desc())
+
+        # 分页
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return success_response({
+            'items': [item.to_dict() for item in pagination.items],
+            'total': pagination.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pagination.pages
+        })
+    except Exception as e:
+        return error_response(f'获取设备维护记录列表失败: {str(e)}', 500, 500)
+
+
+@quality_control_bp.route('/equipment/maintenance', methods=['POST'])
+def create_equipment_maintenance():
+    """新增设备维护记录
+
+    请求体:
+    - equipment_id: 设备ID（必填）
+    - equipment_name: 设备名称（必填）
+    - maintenance_type: 维护类型（必填）
+    - plan_time: 计划时间（必填）
+    - actual_time: 实际时间（选填）
+    - status: 状态（必填），pending/in_progress/completed
+    - remark: 备注（选填）
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return error_response('请求体不能为空')
+
+        required_fields = ['equipment_id', 'equipment_name', 'maintenance_type', 'plan_time', 'status']
+        for field in required_fields:
+            if not data.get(field):
+                return error_response(f'字段 {field} 不能为空')
+
+        record = EquipmentMaintenance(
+            equipment_id=data['equipment_id'].strip(),
+            equipment_name=data['equipment_name'].strip(),
+            maintenance_type=data['maintenance_type'].strip(),
+            plan_time=data['plan_time'],
+            actual_time=data.get('actual_time'),
+            status=data['status'],
+            remark=data.get('remark', '')
+        )
+        db.session.add(record)
+        db.session.commit()
+        return success_response(record.to_dict(), '新增设备维护记录成功')
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'新增设备维护记录失败: {str(e)}', 500, 500)
+
+
+@quality_control_bp.route('/equipment/maintenance/<int:record_id>', methods=['PUT'])
+def update_equipment_maintenance(record_id):
+    """更新设备维护记录"""
+    try:
+        record = EquipmentMaintenance.query.get(record_id)
+        if not record:
+            return error_response('设备维护记录不存在', 404, 404)
+
+        data = request.get_json()
+        if not data:
+            return error_response('请求体不能为空')
+
+        if 'equipment_id' in data:
+            record.equipment_id = data['equipment_id'].strip()
+        if 'equipment_name' in data:
+            record.equipment_name = data['equipment_name'].strip()
+        if 'maintenance_type' in data:
+            record.maintenance_type = data['maintenance_type'].strip()
+        if 'plan_time' in data:
+            record.plan_time = data['plan_time']
+        if 'actual_time' in data:
+            record.actual_time = data.get('actual_time')
+        if 'status' in data:
+            record.status = data['status']
+        if 'remark' in data:
+            record.remark = data.get('remark', '')
+
+        record.updated_at = datetime.utcnow()
+        db.session.commit()
+        return success_response(record.to_dict(), '更新设备维护记录成功')
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'更新设备维护记录失败: {str(e)}', 500, 500)
+
+
+@quality_control_bp.route('/equipment/maintenance/<int:record_id>', methods=['DELETE'])
+def delete_equipment_maintenance(record_id):
+    """删除设备维护记录"""
+    try:
+        record = EquipmentMaintenance.query.get(record_id)
+        if not record:
+            return error_response('设备维护记录不存在', 404, 404)
+
+        db.session.delete(record)
+        db.session.commit()
+        return success_response(None, '删除设备维护记录成功')
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f'删除设备维护记录失败: {str(e)}', 500, 500)
