@@ -1,0 +1,20 @@
+[Unit]
+Description=Aibaoni Valve Repair System - Flask Backend
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/aibaoni/backend
+Environment="PATH=/opt/aibaoni/backend/venv/bin"
+Environment="FLASK_DEBUG=false"
+ExecStart=/opt/aibaoni/backend/venv/bin/gunicorn -c /opt/aibaoni/backend/gunicorn.conf.py run:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target
